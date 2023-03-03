@@ -2,7 +2,7 @@
 Assistant function for AES128. Compiled from the C++ source code:
 
 ```c
-__m128i aes_128_assist(__m128i temp1, __m128i temp2) {
+__m128i AES_128_ASSIST(__m128i temp1, __m128i temp2) {
     __m128i temp3;
     temp2 = _mm_shuffle_epi32 (temp2 ,0xff);
     temp3 = _mm_slli_si128 (temp1, 0x4);
@@ -38,6 +38,7 @@ __m128i aes_128_assist(__m128i temp1, __m128i temp2) {
 
 struct Aes128EncryptKey <: AbstractAesEncryptKey
     keys::NTuple{11, __m128i}
+    Aes128EncryptKey(keys::NTuple{11, __m128i}) = new(keys)
 end
 Aes128EncryptKey(key::ByteSeq) = Aes128EncryptKey(to_uint128(key))
 function Aes128EncryptKey(key::Integer)
@@ -57,6 +58,7 @@ end
 
 struct Aes128DecryptKey <: AbstractAesDecryptKey
     keys::NTuple{11, __m128i}
+    Aes128DecryptKey(keys::NTuple{11, __m128i}) = new(keys)
 end
 Aes128DecryptKey(key::ByteSeq) = Aes128DecryptKey(to_uint128(key))
 Aes128DecryptKey(key::Integer) = Aes128DecryptKey(Aes128EncryptKey(key))
@@ -71,10 +73,10 @@ end
 
 struct Aes128Key <: AbstractAesKey
     keys::NTuple{20, __m128i}
+    Aes128Key(keys::NTuple{20, __m128i}) = new(keys)
 end
-Aes128Key(key::ByteSeq) = Aes128Key(to_uint128(key))
-function Aes128Key(key::Integer)
-    enc_key = Aes128EncryptKey(key)
+Aes128Key(key) = Aes128Key(Aes128EncryptKey(key))
+function Aes128Key(enc_key::Aes128EncryptKey)
     dec_key = Aes128DecryptKey(enc_key)
     Aes128Key((enc_key.keys..., dec_key.keys[2:10]...))
 end
@@ -94,7 +96,7 @@ Aes128DecryptKey(k::Aes128Key) = Aes128DecryptKey((k.keys[11:20]..., k.keys[1]))
     x = aes_enc(x, key8)
     x = aes_enc(x, key9)
     x = aes_enc(x, key10)
-    x = aes_enc_last(x, key11)
+    aes_enc_last(x, key11)
 end
 
 @inline function aes128_decrypt(input::UInt128, key::NTuple{11,__m128i})
@@ -109,7 +111,7 @@ end
     x = aes_dec(x, key8)
     x = aes_dec(x, key9)
     x = aes_dec(x, key10)
-    x = aes_dec_last(x, key11)
+    aes_dec_last(x, key11)
 end
 
 # Block ciphers
