@@ -1,6 +1,6 @@
 name = "AESNI"
 uuid = "99fbed13-29b3-4502-a852-adc41241e91d"
-authors = ["スノル <s@sunoru.com> and contributors"]
+authors = ["Snuoru <s@sunoru.com>"]
 version = "0.1.0"
 
 [compat]
