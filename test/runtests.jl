@@ -1,7 +1,9 @@
 using AESNI
 using Test
 
+include("utils.jl")
+
 @testset "AESNI.jl" begin
     include("./intrinsics.jl")
-    include("./block_ciphers.jl")
+    include("./ecb.jl")
 end

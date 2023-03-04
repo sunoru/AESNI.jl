@@ -20,6 +20,9 @@ end
 @static if AESNI_ENABLED
 
     export encrypt, decrypt
+    export AesMode, ECB, CBC, CFB, OFB, CTR
+    export AesCipher, aes_mode
+    export Aes128Ecb, Aes192Ecb, Aes256Ecb
 
     export Aes128EncryptKey, Aes128DecryptKey, Aes128Key
     export aes128_encrypt, aes128_decrypt
@@ -29,16 +32,20 @@ end
     export aes256_encrypt, aes256_decrypt
 
     using Base: llvmcall
+    using MLStyle: @data
 
     include("./utils.jl")
     include("./Intrinsics.jl")
     using .Intrinsics
     using .Intrinsics: __m128i, AesniUInt128, to_m128i
 
-    include("./common.jl")
-    include("./aes128.jl")
-    include("./aes192.jl")
-    include("./aes256.jl")
+    include("./block_ciphers/common.jl")
+    include("./block_ciphers/aes128.jl")
+    include("./block_ciphers/aes192.jl")
+    include("./block_ciphers/aes256.jl")
+
+    include("./modes/common.jl")
+    include("./modes/ecb.jl")
 
 else
     @warn "This package requires a CPU with AES-NI support."

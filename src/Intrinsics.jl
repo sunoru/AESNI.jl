@@ -10,13 +10,12 @@ struct AesniUInt128
     value::__m128i
     AesniUInt128(x::__m128i) = new(x)
     AesniUInt128(x::UInt128) = new(unsafe_reinterpret_convert(__m128i, x))
-    AesniUInt128(x::Integer) = AesniUInt128(UInt128(x))
+    AesniUInt128(x) = AesniUInt128(to_uint128(x))
 end
 Base.convert(::Type{UInt128}, x::AesniUInt128) = unsafe_reinterpret_convert(UInt128, x.value)
-Base.cconvert(::Type{__m128i}, x::AesniUInt128) = x.value
 Base.UInt128(x::AesniUInt128) = convert(UInt128, x)
 to_m128i(x) = AesniUInt128(x).value
-AESNI.to_uint128(x) = AesniUInt128(x) |> UInt128
+AESNI.to_uint128(x::__m128i) = AesniUInt128(x) |> UInt128
 
 """
     aes_enc(a::UInt128, round_key::UInt128) -> UInt128
