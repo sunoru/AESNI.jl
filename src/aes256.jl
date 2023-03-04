@@ -102,12 +102,14 @@ function key_256_expansion(
 end
 
 struct Aes256EncryptKey <: AbstractAesEncryptKey
-    keys::NTuple{15, __m128i}
-    Aes256EncryptKey(keys::NTuple{15, __m128i}) = new(keys)
+    keys::NTuple{15,__m128i}
+    Aes256EncryptKey(keys::NTuple{15,__m128i}) = new(keys)
 end
 Aes256EncryptKey(key::ByteSeq) = Aes256EncryptKey(pad_or_trunc(key, Val(32)))
 Aes256EncryptKey(key) = Aes256EncryptKey(to_bytes(key))
-Aes256EncryptKey(key1::UInt128, key2::UInt128) = Aes256EncryptKey((to_bytes(key1)..., to_bytes(key2)...))
+Aes256EncryptKey(key1::UInt128, key2::UInt128=UInt128(0)) = Aes256EncryptKey(
+    (to_bytes(key1)..., to_bytes(key2)...)
+)
 function Aes256EncryptKey(key::NTuple{32,UInt8})
     key1 = to_uint128(key[1:16]) |> to_m128i
     key2 = to_uint128(key[17:32]) |> to_m128i
@@ -131,8 +133,8 @@ function Aes256EncryptKey(key::NTuple{32,UInt8})
 end
 
 struct Aes256DecryptKey <: AbstractAesDecryptKey
-    keys::NTuple{15, __m128i}
-    Aes256DecryptKey(keys::NTuple{15, __m128i}) = new(keys)
+    keys::NTuple{15,__m128i}
+    Aes256DecryptKey(keys::NTuple{15,__m128i}) = new(keys)
 end
 Aes256DecryptKey(key) = Aes256DecryptKey(Aes256EncryptKey(key))
 function Aes256DecryptKey(enc_key::Aes256EncryptKey)
@@ -145,8 +147,8 @@ function Aes256DecryptKey(enc_key::Aes256EncryptKey)
 end
 
 struct Aes256Key <: AbstractAesKey
-    keys::NTuple{28, __m128i}
-    Aes256Key(keys::NTuple{28, __m128i}) = new(keys)
+    keys::NTuple{28,__m128i}
+    Aes256Key(keys::NTuple{28,__m128i}) = new(keys)
 end
 Aes256Key(key) = Aes256Key(Aes256EncryptKey(key))
 function Aes256Key(enc_key::Aes256EncryptKey)
