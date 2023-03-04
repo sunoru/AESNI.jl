@@ -186,7 +186,7 @@ end
     aes_dec_last(x, key13)
 end
 
-encrypt(input::UInt128, key::Aes192EncryptKey) = aes192_encrypt(input, Tuple(key)) |> to_uint128
-encrypt(input::UInt128, key::Aes192Key) = encrypt(input, Aes192EncryptKey(key))
-decrypt(input::UInt128, key::Aes192DecryptKey) = aes192_decrypt(input, Tuple(key)) |> to_uint128
-decrypt(input::UInt128, key::Aes192Key) = decrypt(input, Aes192DecryptKey(key))
+encrypt(key::Aes192EncryptKey, input::UInt128) = aes192_encrypt(input, Tuple(key)) |> to_uint128
+encrypt(key::Aes192Key, input::UInt128) = encrypt(input, Aes192EncryptKey(key))
+decrypt(key::Aes192DecryptKey, input::UInt128) = aes192_decrypt(input, Tuple(key)) |> to_uint128
+decrypt(key::Aes192Key, input::UInt128) = decrypt(input, Aes192DecryptKey(key))

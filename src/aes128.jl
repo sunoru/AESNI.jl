@@ -115,7 +115,7 @@ end
 end
 
 # Block ciphers
-encrypt(input::UInt128, key::Aes128EncryptKey) = aes128_encrypt(input, Tuple(key)) |> to_uint128
-encrypt(input::UInt128, key::Aes128Key) = encrypt(input, Aes128EncryptKey(key))
-decrypt(input::UInt128, key::Aes128DecryptKey) = aes128_decrypt(input, Tuple(key)) |> to_uint128
-decrypt(input::UInt128, key::Aes128Key) = decrypt(input, Aes128DecryptKey(key))
+encrypt(key::Aes128EncryptKey, input::UInt128) = aes128_encrypt(input, Tuple(key)) |> to_uint128
+encrypt(key::Aes128Key, input::UInt128) = encrypt(Aes128EncryptKey(key), input)
+decrypt(key::Aes128DecryptKey, input::UInt128) = aes128_decrypt(input, Tuple(key)) |> to_uint128
+decrypt(key::Aes128Key, input::UInt128) = decrypt(Aes128DecryptKey(key), input)
