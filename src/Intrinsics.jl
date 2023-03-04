@@ -1,6 +1,6 @@
 module Intrinsics
 
-using ..AESNI: AESNI, unsafe_reinterpret_convert
+using ..AESNI: AESNI, unsafe_reinterpret_convert, to_uint128
 export aes_dec, aes_dec_last, aes_enc, aes_enc_last, aes_key_gen_assist, aes_imc
 
 const __m128i = NTuple{2,VecElement{UInt64}}
