@@ -76,7 +76,7 @@ struct Aes192EncryptKey <: AbstractAesEncryptKey
     Aes192EncryptKey(keys::NTuple{13, __m128i}) = new(keys)
 end
 Aes192EncryptKey(key::ByteSeq) = Aes192EncryptKey(pad_or_trunc(key, Val(24)))
-Aes192EncryptKey(key::Integer) = Aes192EncryptKey(to_bytes(key))
+Aes192EncryptKey(key) = Aes192EncryptKey(to_bytes(key))
 function Aes192EncryptKey(key::NTuple{24, UInt8})
     key1 = to_uint128(key[1:16]) |> to_m128i
     key2 = to_uint128(key[17:24]) |> to_m128i
@@ -187,6 +187,6 @@ end
 end
 
 encrypt(key::Aes192EncryptKey, input::UInt128) = aes192_encrypt(input, Tuple(key)) |> to_uint128
-encrypt(key::Aes192Key, input::UInt128) = encrypt(input, Aes192EncryptKey(key))
+encrypt(key::Aes192Key, input::UInt128) = encrypt(Aes192EncryptKey(key), input)
 decrypt(key::Aes192DecryptKey, input::UInt128) = aes192_decrypt(input, Tuple(key)) |> to_uint128
-decrypt(key::Aes192Key, input::UInt128) = decrypt(input, Aes192DecryptKey(key))
+decrypt(key::Aes192Key, input::UInt128) = decrypt(Aes192DecryptKey(key), input)

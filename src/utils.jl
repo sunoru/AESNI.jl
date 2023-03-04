@@ -12,6 +12,8 @@ end
 end
 
 to_bytes(x::Core.BuiltinInts) = unsafe_reinterpret_convert(UInt8, x, Val(sizeof(x)))
+to_bytes(x::Integer) = to_bytes(x % UInt128)
+to_bytes(x::AbstractString) = Vector{UInt8}(x)
 const ByteSeq = Union{AbstractArray{UInt8}, Tuple{Vararg{UInt8}}}
 function pad_or_trunc(x::ByteSeq, ::Val{N}) where N
     n = length(x)
