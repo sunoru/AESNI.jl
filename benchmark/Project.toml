@@ -1,3 +1,4 @@
 [deps]
 AESNI = "99fbed13-29b3-4502-a852-adc41241e91d"
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 Nettle = "49dea1ee-f6fa-5aa6-9a11-8816cee7d4b9"

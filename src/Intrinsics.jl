@@ -15,7 +15,6 @@ end
 Base.convert(::Type{UInt128}, x::AesniUInt128) = unsafe_reinterpret_convert(UInt128, x.value)
 Base.UInt128(x::AesniUInt128) = convert(UInt128, x)
 to_m128i(x) = AesniUInt128(x).value
-AESNI.to_byte_block(x::__m128i) = AesniUInt128(x) |> UInt128 |> AESNI.to_byte_block
 AESNI.to_uint128(x::__m128i) = AesniUInt128(x) |> UInt128
 
 # will be automatically inlined

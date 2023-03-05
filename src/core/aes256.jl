@@ -106,7 +106,7 @@ struct Aes256EncryptKey <: AbstractAesEncryptKey
     Aes256EncryptKey(keys::NTuple{15,__m128i}) = new(keys)
 end
 Aes256EncryptKey(key1::UInt128, key2::UInt128) = Aes256EncryptKey(
-    (to_byte_block(key1)..., to_byte_block(key2)...)
+    (from_uint128(Vector{UInt8}, key1)..., from_uint128(Vector{UInt8}, key2)...)
 )
 function Aes256EncryptKey(key::ByteSequence)
     _ensure_key_size(key, 256)
@@ -158,7 +158,7 @@ end
 Aes256EncryptKey(k::Aes256Key) = Aes256EncryptKey(k.keys[1:15])
 Aes256DecryptKey(k::Aes256Key) = Aes256DecryptKey((k.keys[15:28]..., k.keys[1]))
 
-@inline function aes256_encrypt(input::AesByteBlock, key::NTuple{15,__m128i})
+@inline function aes256_encrypt(input::UInt128, key::NTuple{15,__m128i})
     key1, key2, key3, key4, key5, key6, key7, key8, key9, key10, key11, key12, key13, key14, key15 = key
     x = _xor(to_m128i(input), key1)
     x = aes_enc(x, key2)
@@ -174,10 +174,10 @@ Aes256DecryptKey(k::Aes256Key) = Aes256DecryptKey((k.keys[15:28]..., k.keys[1]))
     x = aes_enc(x, key12)
     x = aes_enc(x, key13)
     x = aes_enc(x, key14)
-    aes_enc_last(x, key15) |> to_byte_block
+    aes_enc_last(x, key15) |> to_uint128
 end
 
-@inline function aes256_decrypt(input::AesByteBlock, key::NTuple{15,__m128i})
+@inline function aes256_decrypt(input::UInt128, key::NTuple{15,__m128i})
     key1, key2, key3, key4, key5, key6, key7, key8, key9, key10, key11, key12, key13, key14, key15 = key
     x = _xor(to_m128i(input), key1)
     x = aes_dec(x, key2)
@@ -193,10 +193,10 @@ end
     x = aes_dec(x, key12)
     x = aes_dec(x, key13)
     x = aes_dec(x, key14)
-    aes_dec_last(x, key15) |> to_byte_block
+    aes_dec_last(x, key15) |> to_uint128
 end
 
 _get_encrypt_key(key::Aes256Key) = Aes256EncryptKey(key)
 _get_decrypt_key(key::Aes256Key) = Aes256DecryptKey(key)
-encrypt(key::Aes256EncryptKey, input::AesByteBlock) = aes256_encrypt(input, Tuple(key))
-decrypt(key::Aes256DecryptKey, input::AesByteBlock) = aes256_decrypt(input, Tuple(key))
+encrypt(key::Aes256EncryptKey, input::UInt128) = aes256_encrypt(input, Tuple(key))
+decrypt(key::Aes256DecryptKey, input::UInt128) = aes256_decrypt(input, Tuple(key))

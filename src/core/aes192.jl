@@ -151,7 +151,7 @@ end
 Aes192EncryptKey(k::Aes192Key) = Aes192EncryptKey(k.keys[1:13])
 Aes192DecryptKey(k::Aes192Key) = Aes192DecryptKey((k.keys[13:24]..., k.keys[1]))
 
-@inline function aes192_encrypt(input::AesByteBlock, key::NTuple{13,__m128i})
+@inline function aes192_encrypt(input::UInt128, key::NTuple{13,__m128i})
     key1, key2, key3, key4, key5, key6, key7, key8, key9, key10, key11, key12, key13 = key
     x = _xor(to_m128i(input), key1)
     x = aes_enc(x, key2)
@@ -165,10 +165,10 @@ Aes192DecryptKey(k::Aes192Key) = Aes192DecryptKey((k.keys[13:24]..., k.keys[1]))
     x = aes_enc(x, key10)
     x = aes_enc(x, key11)
     x = aes_enc(x, key12)
-    aes_enc_last(x, key13) |> to_byte_block
+    aes_enc_last(x, key13) |> to_uint128
 end
 
-@inline function aes192_decrypt(input::AesByteBlock, key::NTuple{13,__m128i})
+@inline function aes192_decrypt(input::UInt128, key::NTuple{13,__m128i})
     key1, key2, key3, key4, key5, key6, key7, key8, key9, key10, key11, key12, key13 = key
     x = _xor(to_m128i(input), key1)
     x = aes_dec(x, key2)
@@ -182,10 +182,10 @@ end
     x = aes_dec(x, key10)
     x = aes_dec(x, key11)
     x = aes_dec(x, key12)
-    aes_dec_last(x, key13) |> to_byte_block
+    aes_dec_last(x, key13) |> to_uint128
 end
 
 _get_encrypt_key(key::Aes192Key) = Aes192EncryptKey(key)
 _get_decrypt_key(key::Aes192Key) = Aes192DecryptKey(key)
-encrypt(key::Aes192EncryptKey, input::AesByteBlock) = aes192_encrypt(input, Tuple(key))
-decrypt(key::Aes192DecryptKey, input::AesByteBlock) = aes192_decrypt(input, Tuple(key))
+encrypt(key::Aes192EncryptKey, input::UInt128) = aes192_encrypt(input, Tuple(key))
+decrypt(key::Aes192DecryptKey, input::UInt128) = aes192_decrypt(input, Tuple(key))
