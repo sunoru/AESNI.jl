@@ -75,7 +75,7 @@ struct Aes192EncryptKey <: AbstractAesEncryptKey
     keys::NTuple{13, __m128i}
     Aes192EncryptKey(keys::NTuple{13, __m128i}) = new(keys)
 end
-Aes192EncryptKey(key::ByteSequence) = Aes192EncryptKey(pad_or_trunc(key, Val(24)))
+Aes192EncryptKey(key::ByteSequence) = Aes192EncryptKey(pad_or_trunc(key, 24))
 function Aes192EncryptKey(key::NTuple{24, UInt8})
     key1 = to_uint128(key[1:16]) |> to_m128i
     key2 = to_uint128(key[17:24]) |> to_m128i

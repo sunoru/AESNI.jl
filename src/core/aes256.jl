@@ -105,7 +105,7 @@ struct Aes256EncryptKey <: AbstractAesEncryptKey
     keys::NTuple{15,__m128i}
     Aes256EncryptKey(keys::NTuple{15,__m128i}) = new(keys)
 end
-Aes256EncryptKey(key::ByteSequence) = Aes256EncryptKey(pad_or_trunc(key, Val(32)))
+Aes256EncryptKey(key::ByteSequence) = Aes256EncryptKey(pad_or_trunc(key, 32))
 Aes256EncryptKey(key1::UInt128, key2::UInt128=UInt128(0)) = Aes256EncryptKey(
     (to_bytes(key1)..., to_bytes(key2)...)
 )

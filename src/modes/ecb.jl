@@ -21,7 +21,7 @@ function encrypt(ctx::AesEcbCipher, plain::AbstractArray{UInt8})
         block_i = to_uint128(plain[(i-1)*16+1:i*16])
         b128[i] = encrypt(key, block_i)
     end
-    b128[n] = encrypt(key, pad_or_trunc(plain[(n-1)*16+1:end], Val(16))) |> to_uint128
+    b128[n] = encrypt(key, pad_or_trunc(plain[(n-1)*16+1:end], 16)) |> to_uint128
     b
 end
 

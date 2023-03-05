@@ -30,11 +30,11 @@ function to_bytes(x::UInt128)
 end
 
 """
-    pad_or_trunc(x::ByteSequence, ::Val{N}) where {N}
+    pad_or_trunc(x::ByteSequence, N)
 
 Pads or truncates a little-endian byte sequence to length `N`.
 """
-function pad_or_trunc(x::ByteSequence, ::Val{N}) where {N}
+@inline function pad_or_trunc(x::ByteSequence, N)
     n = length(x)
     if n ≥ N
         Tuple(x[1:N])
@@ -55,4 +55,4 @@ to_uint128(bytes::AesByteBlock) = unsafe_reinterpret_convert(
         bytes
     end
 )
-to_uint128(bytes::ByteSequence) = to_uint128(pad_or_trunc(bytes, Val(16)))
+to_uint128(bytes::ByteSequence) = to_uint128(pad_or_trunc(bytes, 16))

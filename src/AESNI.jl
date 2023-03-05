@@ -18,6 +18,8 @@ end
 
 
 @static if AESNI_ENABLED
+    export AesByteBlock
+
     export Aes128EncryptKey, Aes128DecryptKey, Aes128Key
     export Aes192EncryptKey, Aes192DecryptKey, Aes192Key
     export Aes256EncryptKey, Aes256DecryptKey, Aes256Key
