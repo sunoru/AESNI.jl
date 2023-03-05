@@ -174,7 +174,7 @@ Aes256DecryptKey(k::Aes256Key) = Aes256DecryptKey((k.keys[15:28]..., k.keys[1]))
     x = aes_enc(x, key12)
     x = aes_enc(x, key13)
     x = aes_enc(x, key14)
-    aes_enc_last(x, key15)
+    aes_enc_last(x, key15) |> to_bytes
 end
 
 @inline function aes256_decrypt(input::AesByteBlock, key::NTuple{15,__m128i})
@@ -193,7 +193,7 @@ end
     x = aes_dec(x, key12)
     x = aes_dec(x, key13)
     x = aes_dec(x, key14)
-    aes_dec_last(x, key15)
+    aes_dec_last(x, key15) |> to_bytes
 end
 
 _get_encrypt_key(key::Aes256Key) = Aes256EncryptKey(key)
