@@ -20,7 +20,7 @@ end
 
 Converts a `UInt128` value to a little-endian byte sequence.
 """
-function to_bytes(x::UInt128)
+@inline function to_bytes(x::UInt128)
     bytes = unsafe_reinterpret_convert(UInt8, x, Val(16))
     @static if IS_BIG_ENDIAN
         reverse(bytes)
@@ -48,11 +48,11 @@ end
 
 Converts a little-endian byte sequence to a `UInt128` value.
 """
-to_uint128(bytes::AesByteBlock) = unsafe_reinterpret_convert(
+@inline to_uint128(bytes::AesByteBlock) = unsafe_reinterpret_convert(
     UInt128, @static if IS_BIG_ENDIAN
         reverse(bytes)
     else
         bytes
     end
 )
-to_uint128(bytes::ByteSequence) = to_uint128(pad_or_trunc(bytes, 16))
+@inline to_uint128(bytes::ByteSequence) = to_uint128(pad_or_trunc(bytes, 16))
