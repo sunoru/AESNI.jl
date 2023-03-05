@@ -18,18 +18,14 @@ end
 
 
 @static if AESNI_ENABLED
+    export Aes128EncryptKey, Aes128DecryptKey, Aes128Key
+    export Aes192EncryptKey, Aes192DecryptKey, Aes192Key
+    export Aes256EncryptKey, Aes256DecryptKey, Aes256Key
 
     export encrypt, decrypt
     export AesMode, ECB, CBC, CFB, OFB, CTR
     export AesCipher, aes_mode
     export Aes128Ecb, Aes192Ecb, Aes256Ecb
-
-    export Aes128EncryptKey, Aes128DecryptKey, Aes128Key
-    export aes128_encrypt, aes128_decrypt
-    export Aes192EncryptKey, Aes192DecryptKey, Aes192Key
-    export aes192_encrypt, aes192_decrypt
-    export Aes256EncryptKey, Aes256DecryptKey, Aes256Key
-    export aes256_encrypt, aes256_decrypt
 
     using Base: llvmcall
     using MLStyle: @data
@@ -37,12 +33,12 @@ end
     include("./utils.jl")
     include("./Intrinsics.jl")
     using .Intrinsics
-    using .Intrinsics: __m128i, AesniUInt128, to_m128i
+    using .Intrinsics: __m128i, AesniUInt128, to_m128i, _xor
 
-    include("./block_ciphers/common.jl")
-    include("./block_ciphers/aes128.jl")
-    include("./block_ciphers/aes192.jl")
-    include("./block_ciphers/aes256.jl")
+    include("./core/common.jl")
+    include("./core/aes128.jl")
+    include("./core/aes192.jl")
+    include("./core/aes256.jl")
 
     include("./modes/common.jl")
     include("./modes/ecb.jl")

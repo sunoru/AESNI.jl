@@ -3,8 +3,6 @@ using AESNI
 using AESNI.Intrinsics
 
 @testset "Intrinsics" begin
-    @test 123 == AESNI.to_uint128(AESNI.Intrinsics.to_m128i(123))
-
     a = 0xae727fbe27203f7c2cc27781353678f5
     b = 0xcb7d50b720b6b76ebde6fae25dabc1f0
     @test aes_enc(a, b) == 0x386a3ec625ed6657abbe4ab3fdfaf070

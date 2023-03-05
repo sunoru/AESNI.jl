@@ -105,8 +105,7 @@ struct Aes256EncryptKey <: AbstractAesEncryptKey
     keys::NTuple{15,__m128i}
     Aes256EncryptKey(keys::NTuple{15,__m128i}) = new(keys)
 end
-Aes256EncryptKey(key::ByteSeq) = Aes256EncryptKey(pad_or_trunc(key, Val(32)))
-Aes256EncryptKey(key) = Aes256EncryptKey(to_bytes(key))
+Aes256EncryptKey(key::ByteSequence) = Aes256EncryptKey(pad_or_trunc(key, Val(32)))
 Aes256EncryptKey(key1::UInt128, key2::UInt128=UInt128(0)) = Aes256EncryptKey(
     (to_bytes(key1)..., to_bytes(key2)...)
 )
@@ -159,9 +158,9 @@ end
 Aes256EncryptKey(k::Aes256Key) = Aes256EncryptKey(k.keys[1:15])
 Aes256DecryptKey(k::Aes256Key) = Aes256DecryptKey((k.keys[15:28]..., k.keys[1]))
 
-@inline function aes256_encrypt(input::UInt128, key::NTuple{15,__m128i})
+@inline function aes256_encrypt(input::AesByteBlock, key::NTuple{15,__m128i})
     key1, key2, key3, key4, key5, key6, key7, key8, key9, key10, key11, key12, key13, key14, key15 = key
-    x = to_uint128(key1) ⊻ input |> to_m128i
+    x = _xor(to_m128i(input), key1)
     x = aes_enc(x, key2)
     x = aes_enc(x, key3)
     x = aes_enc(x, key4)
@@ -178,9 +177,9 @@ Aes256DecryptKey(k::Aes256Key) = Aes256DecryptKey((k.keys[15:28]..., k.keys[1]))
     aes_enc_last(x, key15)
 end
 
-@inline function aes256_decrypt(input::UInt128, key::NTuple{15,__m128i})
+@inline function aes256_decrypt(input::AesByteBlock, key::NTuple{15,__m128i})
     key1, key2, key3, key4, key5, key6, key7, key8, key9, key10, key11, key12, key13, key14, key15 = key
-    x = to_uint128(key1) ⊻ input |> to_m128i
+    x = _xor(to_m128i(input), key1)
     x = aes_dec(x, key2)
     x = aes_dec(x, key3)
     x = aes_dec(x, key4)
@@ -197,7 +196,7 @@ end
     aes_dec_last(x, key15)
 end
 
-encrypt(key::Aes256EncryptKey, input::UInt128) = aes256_encrypt(input, Tuple(key)) |> to_uint128
-encrypt(key::Aes256Key, input::UInt128) = encrypt(Aes256EncryptKey(key), input)
-decrypt(key::Aes256DecryptKey, input::UInt128) = aes256_decrypt(input, Tuple(key)) |> to_uint128
-decrypt(key::Aes256Key, input::UInt128) = decrypt(Aes256DecryptKey(key), input)
+_get_encrypt_key(key::Aes256Key) = Aes256EncryptKey(key)
+_get_decrypt_key(key::Aes256Key) = Aes256DecryptKey(key)
+encrypt(key::Aes256EncryptKey, input::AesByteBlock) = aes256_encrypt(input, Tuple(key))
+decrypt(key::Aes256DecryptKey, input::AesByteBlock) = aes256_decrypt(input, Tuple(key))

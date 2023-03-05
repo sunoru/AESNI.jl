@@ -40,10 +40,9 @@ struct Aes128EncryptKey <: AbstractAesEncryptKey
     keys::NTuple{11, __m128i}
     Aes128EncryptKey(keys::NTuple{11, __m128i}) = new(keys)
 end
-Aes128EncryptKey(key::ByteSeq) = Aes128EncryptKey(to_uint128(key))
-Aes128EncryptKey(key) = Aes128EncryptKey(to_bytes(key))
-function Aes128EncryptKey(key::Integer)
-    key1 = to_m128i(key)
+Aes128EncryptKey(key::UInt128) = Aes128EncryptKey(to_bytes(key))
+function Aes128EncryptKey(key::ByteSequence)
+    key1 = to_uint128(key) |> to_m128i
     key2 = aes_128_assist(key1, aes_key_gen_assist(key1, Val(0x1)))
     key3 = aes_128_assist(key2, aes_key_gen_assist(key2, Val(0x2)))
     key4 = aes_128_assist(key3, aes_key_gen_assist(key3, Val(0x4)))
@@ -84,9 +83,9 @@ end
 Aes128EncryptKey(k::Aes128Key) = Aes128EncryptKey(k.keys[1:11])
 Aes128DecryptKey(k::Aes128Key) = Aes128DecryptKey((k.keys[11:20]..., k.keys[1]))
 
-@inline function aes128_encrypt(input::UInt128, key::NTuple{11,__m128i})
+@inline function aes128_encrypt(input::AesByteBlock, key::NTuple{11,__m128i})
     key1, key2, key3, key4, key5, key6, key7, key8, key9, key10, key11 = key
-    x = to_uint128(key1) ⊻ input |> to_m128i
+    x = _xor(to_m128i(input), key1)
     x = aes_enc(x, key2)
     x = aes_enc(x, key3)
     x = aes_enc(x, key4)
@@ -96,12 +95,12 @@ Aes128DecryptKey(k::Aes128Key) = Aes128DecryptKey((k.keys[11:20]..., k.keys[1]))
     x = aes_enc(x, key8)
     x = aes_enc(x, key9)
     x = aes_enc(x, key10)
-    aes_enc_last(x, key11)
+    aes_enc_last(x, key11) |> to_bytes
 end
 
-@inline function aes128_decrypt(input::UInt128, key::NTuple{11,__m128i})
+@inline function aes128_decrypt(input::AesByteBlock, key::NTuple{11,__m128i})
     key1, key2, key3, key4, key5, key6, key7, key8, key9, key10, key11 = key
-    x = to_uint128(key1) ⊻ input |> to_m128i
+    x = _xor(to_m128i(input), key1)
     x = aes_dec(x, key2)
     x = aes_dec(x, key3)
     x = aes_dec(x, key4)
@@ -111,11 +110,10 @@ end
     x = aes_dec(x, key8)
     x = aes_dec(x, key9)
     x = aes_dec(x, key10)
-    aes_dec_last(x, key11)
+    aes_dec_last(x, key11) |> to_bytes
 end
 
-# Block ciphers
-encrypt(key::Aes128EncryptKey, input::UInt128) = aes128_encrypt(input, Tuple(key)) |> to_uint128
-encrypt(key::Aes128Key, input::UInt128) = encrypt(Aes128EncryptKey(key), input)
-decrypt(key::Aes128DecryptKey, input::UInt128) = aes128_decrypt(input, Tuple(key)) |> to_uint128
-decrypt(key::Aes128Key, input::UInt128) = decrypt(Aes128DecryptKey(key), input)
+_get_encrypt_key(key::Aes128Key) = Aes128EncryptKey(key)
+_get_decrypt_key(key::Aes128Key) = Aes128DecryptKey(key)
+encrypt(key::Aes128EncryptKey, input::AesByteBlock) = aes128_encrypt(input, Tuple(key))
+decrypt(key::Aes128DecryptKey, input::AesByteBlock) = aes128_decrypt(input, Tuple(key))

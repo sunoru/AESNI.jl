@@ -75,8 +75,7 @@ struct Aes192EncryptKey <: AbstractAesEncryptKey
     keys::NTuple{13, __m128i}
     Aes192EncryptKey(keys::NTuple{13, __m128i}) = new(keys)
 end
-Aes192EncryptKey(key::ByteSeq) = Aes192EncryptKey(pad_or_trunc(key, Val(24)))
-Aes192EncryptKey(key) = Aes192EncryptKey(to_bytes(key))
+Aes192EncryptKey(key::ByteSequence) = Aes192EncryptKey(pad_or_trunc(key, Val(24)))
 function Aes192EncryptKey(key::NTuple{24, UInt8})
     key1 = to_uint128(key[1:16]) |> to_m128i
     key2 = to_uint128(key[17:24]) |> to_m128i
@@ -152,9 +151,9 @@ end
 Aes192EncryptKey(k::Aes192Key) = Aes192EncryptKey(k.keys[1:13])
 Aes192DecryptKey(k::Aes192Key) = Aes192DecryptKey((k.keys[13:24]...,k.keys[1]))
 
-@inline function aes192_encrypt(input::UInt128, key::NTuple{13,__m128i})
+@inline function aes192_encrypt(input::AesByteBlock, key::NTuple{13,__m128i})
     key1, key2, key3, key4, key5, key6, key7, key8, key9, key10, key11, key12, key13 = key
-    x = to_uint128(key1) ⊻ input |> to_m128i
+    x = _xor(to_m128i(input), key1)
     x = aes_enc(x, key2)
     x = aes_enc(x, key3)
     x = aes_enc(x, key4)
@@ -166,12 +165,12 @@ Aes192DecryptKey(k::Aes192Key) = Aes192DecryptKey((k.keys[13:24]...,k.keys[1]))
     x = aes_enc(x, key10)
     x = aes_enc(x, key11)
     x = aes_enc(x, key12)
-    aes_enc_last(x, key13)
+    aes_enc_last(x, key13) |> to_bytes
 end
 
-@inline function aes192_decrypt(input::UInt128, key::NTuple{13,__m128i})
+@inline function aes192_decrypt(input::AesByteBlock, key::NTuple{13,__m128i})
     key1, key2, key3, key4, key5, key6, key7, key8, key9, key10, key11, key12, key13 = key
-    x = to_uint128(key1) ⊻ input |> to_m128i
+    x = _xor(to_m128i(input), key1)
     x = aes_dec(x, key2)
     x = aes_dec(x, key3)
     x = aes_dec(x, key4)
@@ -183,10 +182,10 @@ end
     x = aes_dec(x, key10)
     x = aes_dec(x, key11)
     x = aes_dec(x, key12)
-    aes_dec_last(x, key13)
+    aes_dec_last(x, key13) |> to_bytes
 end
 
-encrypt(key::Aes192EncryptKey, input::UInt128) = aes192_encrypt(input, Tuple(key)) |> to_uint128
-encrypt(key::Aes192Key, input::UInt128) = encrypt(Aes192EncryptKey(key), input)
-decrypt(key::Aes192DecryptKey, input::UInt128) = aes192_decrypt(input, Tuple(key)) |> to_uint128
-decrypt(key::Aes192Key, input::UInt128) = decrypt(Aes192DecryptKey(key), input)
+_get_encrypt_key(key::Aes192Key) = Aes192EncryptKey(key)
+_get_decrypt_key(key::Aes192Key) = Aes192DecryptKey(key)
+encrypt(key::Aes192EncryptKey, input::AesByteBlock) = aes192_encrypt(input, Tuple(key))
+decrypt(key::Aes192DecryptKey, input::AesByteBlock) = aes192_decrypt(input, Tuple(key))
