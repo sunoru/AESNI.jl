@@ -139,17 +139,14 @@ function Aes192DecryptKey(enc_key::Aes192EncryptKey)
 end
 
 struct Aes192Key <: AbstractAesKey
-    keys::NTuple{24,__m128i}
-    Aes192Key(keys::NTuple{24,__m128i}) = new(keys)
+    enc::Aes192EncryptKey
+    dec::Aes192DecryptKey
+    Aes192Key(enc::Aes192EncryptKey, dec::Aes192DecryptKey=Aes192DecryptKey(enc)) = new(enc, dec)
 end
 Aes192Key(key) = Aes192Key(Aes192EncryptKey(key))
-function Aes192Key(enc_key::Aes192EncryptKey)
-    dec_key = Aes192DecryptKey(enc_key)
-    Aes192Key((enc_key.keys..., dec_key.keys[2:12]...))
-end
 
-Aes192EncryptKey(k::Aes192Key) = Aes192EncryptKey(k.keys[1:13])
-Aes192DecryptKey(k::Aes192Key) = Aes192DecryptKey((k.keys[13:24]..., k.keys[1]))
+Aes192EncryptKey(k::Aes192Key) = k.enc
+Aes192DecryptKey(k::Aes192Key) = k.dec
 
 @inline function aes192_encrypt(input::UInt128, key::NTuple{13,__m128i})
     key1, key2, key3, key4, key5, key6, key7, key8, key9, key10, key11, key12, key13 = key

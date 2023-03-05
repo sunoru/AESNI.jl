@@ -37,8 +37,8 @@ __m128i AES_128_ASSIST(__m128i temp1, __m128i temp2) {
 )
 
 struct Aes128EncryptKey <: AbstractAesEncryptKey
-    keys::NTuple{11, __m128i}
-    Aes128EncryptKey(keys::NTuple{11, __m128i}) = new(keys)
+    keys::NTuple{11,__m128i}
+    Aes128EncryptKey(keys::NTuple{11,__m128i}) = new(keys)
 end
 Aes128EncryptKey(key::UInt128) = Aes128EncryptKey(unsafe_reinterpret_convert(AesByteBlock, key))
 function Aes128EncryptKey(key::ByteSequence)
@@ -58,8 +58,8 @@ function Aes128EncryptKey(key::ByteSequence)
 end
 
 struct Aes128DecryptKey <: AbstractAesDecryptKey
-    keys::NTuple{11, __m128i}
-    Aes128DecryptKey(keys::NTuple{11, __m128i}) = new(keys)
+    keys::NTuple{11,__m128i}
+    Aes128DecryptKey(keys::NTuple{11,__m128i}) = new(keys)
 end
 Aes128DecryptKey(key) = Aes128DecryptKey(Aes128EncryptKey(key))
 function Aes128DecryptKey(enc_key::Aes128EncryptKey)
@@ -72,17 +72,14 @@ function Aes128DecryptKey(enc_key::Aes128EncryptKey)
 end
 
 struct Aes128Key <: AbstractAesKey
-    keys::NTuple{20, __m128i}
-    Aes128Key(keys::NTuple{20, __m128i}) = new(keys)
+    enc::Aes128EncryptKey
+    dec::Aes128DecryptKey
+    Aes128Key(enc::Aes128EncryptKey, dec::Aes128DecryptKey=Aes128DecryptKey(enc)) = new(enc, dec)
 end
 Aes128Key(key) = Aes128Key(Aes128EncryptKey(key))
-function Aes128Key(enc_key::Aes128EncryptKey)
-    dec_key = Aes128DecryptKey(enc_key)
-    Aes128Key((enc_key.keys..., dec_key.keys[2:10]...))
-end
 
-Aes128EncryptKey(k::Aes128Key) = Aes128EncryptKey(k.keys[1:11])
-Aes128DecryptKey(k::Aes128Key) = Aes128DecryptKey((k.keys[11:20]..., k.keys[1]))
+Aes128EncryptKey(k::Aes128Key) = k.enc
+Aes128DecryptKey(k::Aes128Key) = k.dec
 
 @inline function aes128_encrypt(input::UInt128, key::NTuple{11,__m128i})
     key1, key2, key3, key4, key5, key6, key7, key8, key9, key10, key11 = key

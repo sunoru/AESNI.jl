@@ -19,12 +19,14 @@ function encrypt(ctx::AesEcbCipher, plain::AbstractArray{UInt8})
     b = Vector{UInt8}(undef, n * 16)
     b128 = reinterpret(UInt128, b)
     plain128 = reinterpret(UInt128, @view plain[1:n*16])
-    for i in 1:n-1
-        block_i = plain128[i]
-        b128[i] = encrypt(key, block_i)
+    @inbounds begin
+        for i in 1:n-1
+            block_i = plain128[i]
+            b128[i] = encrypt(key, block_i)
+        end
+        block_n = to_uint128([plain[(n-1)*16+1:end]..., Iterators.repeated(0x00, n * 16 - len)...])
+        b128[n] = encrypt(key, block_n)
     end
-    block_n = to_uint128([plain[(n-1)*16+1:end]..., Iterators.repeated(0x00, n * 16 - len)...])
-    b128[n] = encrypt(key, block_n)
     b
 end
 
@@ -36,7 +38,7 @@ function decrypt(ctx::AesEcbCipher, cipher::AbstractArray{UInt8})
     b = Vector{UInt8}(undef, n * 16)
     b128 = reinterpret(UInt128, b)
     cipher128 = reinterpret(UInt128, cipher)
-    for i in 1:n
+    @inbounds for i in 1:n
         b128[i] = decrypt(key, cipher128[i])
     end
     b

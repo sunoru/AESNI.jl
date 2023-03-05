@@ -146,17 +146,14 @@ function Aes256DecryptKey(enc_key::Aes256EncryptKey)
 end
 
 struct Aes256Key <: AbstractAesKey
-    keys::NTuple{28,__m128i}
-    Aes256Key(keys::NTuple{28,__m128i}) = new(keys)
+    enc::Aes256EncryptKey
+    dec::Aes256DecryptKey
+    Aes256Key(enc::Aes256EncryptKey, dec::Aes256DecryptKey=Aes256DecryptKey(enc)) = new(enc, dec)
 end
 Aes256Key(key) = Aes256Key(Aes256EncryptKey(key))
-function Aes256Key(enc_key::Aes256EncryptKey)
-    dec_key = Aes256DecryptKey(enc_key)
-    Aes256Key((enc_key.keys..., dec_key.keys[2:14]...))
-end
 
-Aes256EncryptKey(k::Aes256Key) = Aes256EncryptKey(k.keys[1:15])
-Aes256DecryptKey(k::Aes256Key) = Aes256DecryptKey((k.keys[15:28]..., k.keys[1]))
+Aes256EncryptKey(k::Aes256Key) = k.enc
+Aes256DecryptKey(k::Aes256Key) = k.dec
 
 @inline function aes256_encrypt(input::UInt128, key::NTuple{15,__m128i})
     key1, key2, key3, key4, key5, key6, key7, key8, key9, key10, key11, key12, key13, key14, key15 = key

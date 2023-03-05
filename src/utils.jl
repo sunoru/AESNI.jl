@@ -6,6 +6,13 @@ const ByteSequence = Union{AbstractArray{UInt8},Tuple{Vararg{UInt8}},Tuple{Varar
     r = Ref(x)
     GC.@preserve r unsafe_load(Ptr{T}(pointer_from_objref(r)))
 end
+@inline function unsafe_reinterpret_convert(::Type{T}, x, N) where {T}
+    r = Ref(x)
+    GC.@preserve r begin
+        ptr = Ptr{T}(pointer_from_objref(r))
+        [unsafe_load(ptr, i) for i in 1:N]
+    end
+end
 
 macro check_byte_length(bytes)
     quote
@@ -19,7 +26,7 @@ end
 Converts a `UInt128` value to a little-endian byte sequence.
 """
 @inline function from_uint128(::Type{<:AbstractArray{UInt8}}, x::UInt128)
-    a = reinterpret(UInt8, [x])
+    a = unsafe_reinterpret_convert(UInt8, x, 16)
     @static if IS_BIG_ENDIAN
         reverse(a)
     else
