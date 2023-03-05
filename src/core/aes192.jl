@@ -19,7 +19,7 @@ void key_192_assist(__m128i* temp1, __m128i * temp2, __m128i * temp3) {
 }
 ```
 """
-@inline key_192_assist(a::Base.RefValue{__m128i},b::Base.RefValue{__m128i},c::Base.RefValue{__m128i}) = GC.@preserve a b c llvmcall(
+@inline key_192_assist(a::Base.RefValue{__m128i}, b::Base.RefValue{__m128i}, c::Base.RefValue{__m128i}) = GC.@preserve a b c llvmcall(
     """%ptr0 = inttoptr i64 %0 to <2 x i64>*
     %ptr1 = inttoptr i64 %1 to <2 x i64>*
     %ptr2 = inttoptr i64 %2 to <2 x i64>*
@@ -66,19 +66,19 @@ for imm = 0x0:0x1
         ret <2 x i64> %3"""
     @eval _shuffle_pd(a::__m128i, b::__m128i, ::Val{$imm}) = llvmcall(
         $ircode,
-        __m128i, Tuple{__m128i, __m128i},
+        __m128i, Tuple{__m128i,__m128i},
         a, b
     )
 end
 
 struct Aes192EncryptKey <: AbstractAesEncryptKey
-    keys::NTuple{13, __m128i}
-    Aes192EncryptKey(keys::NTuple{13, __m128i}) = new(keys)
+    keys::NTuple{13,__m128i}
+    Aes192EncryptKey(keys::NTuple{13,__m128i}) = new(keys)
 end
-Aes192EncryptKey(key::ByteSequence) = Aes192EncryptKey(pad_or_trunc(key, 24))
-function Aes192EncryptKey(key::NTuple{24, UInt8})
+function Aes192EncryptKey(key::ByteSequence)
+    _ensure_key_size(key, 192)
     key1 = to_uint128(key[1:16]) |> to_m128i
-    key2 = to_uint128(key[17:24]) |> to_m128i
+    key2 = to_uint128([key[17:24]..., 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]) |> to_m128i
     temp1 = Ref(key1)
     temp3 = Ref(key2)
 
@@ -125,8 +125,8 @@ function Aes192EncryptKey(key::NTuple{24, UInt8})
 end
 
 struct Aes192DecryptKey <: AbstractAesDecryptKey
-    keys::NTuple{13, __m128i}
-    Aes192DecryptKey(keys::NTuple{13, __m128i}) = new(keys)
+    keys::NTuple{13,__m128i}
+    Aes192DecryptKey(keys::NTuple{13,__m128i}) = new(keys)
 end
 Aes192DecryptKey(key) = Aes192DecryptKey(Aes192EncryptKey(key))
 function Aes192DecryptKey(enc_key::Aes192EncryptKey)
@@ -139,8 +139,8 @@ function Aes192DecryptKey(enc_key::Aes192EncryptKey)
 end
 
 struct Aes192Key <: AbstractAesKey
-    keys::NTuple{24, __m128i}
-    Aes192Key(keys::NTuple{24, __m128i}) = new(keys)
+    keys::NTuple{24,__m128i}
+    Aes192Key(keys::NTuple{24,__m128i}) = new(keys)
 end
 Aes192Key(key) = Aes192Key(Aes192EncryptKey(key))
 function Aes192Key(enc_key::Aes192EncryptKey)
@@ -149,7 +149,7 @@ function Aes192Key(enc_key::Aes192EncryptKey)
 end
 
 Aes192EncryptKey(k::Aes192Key) = Aes192EncryptKey(k.keys[1:13])
-Aes192DecryptKey(k::Aes192Key) = Aes192DecryptKey((k.keys[13:24]...,k.keys[1]))
+Aes192DecryptKey(k::Aes192Key) = Aes192DecryptKey((k.keys[13:24]..., k.keys[1]))
 
 @inline function aes192_encrypt(input::AesByteBlock, key::NTuple{13,__m128i})
     key1, key2, key3, key4, key5, key6, key7, key8, key9, key10, key11, key12, key13 = key
@@ -165,7 +165,7 @@ Aes192DecryptKey(k::Aes192Key) = Aes192DecryptKey((k.keys[13:24]...,k.keys[1]))
     x = aes_enc(x, key10)
     x = aes_enc(x, key11)
     x = aes_enc(x, key12)
-    aes_enc_last(x, key13) |> to_bytes
+    aes_enc_last(x, key13) |> to_byte_block
 end
 
 @inline function aes192_decrypt(input::AesByteBlock, key::NTuple{13,__m128i})
@@ -182,7 +182,7 @@ end
     x = aes_dec(x, key10)
     x = aes_dec(x, key11)
     x = aes_dec(x, key12)
-    aes_dec_last(x, key13) |> to_bytes
+    aes_dec_last(x, key13) |> to_byte_block
 end
 
 _get_encrypt_key(key::Aes192Key) = Aes192EncryptKey(key)

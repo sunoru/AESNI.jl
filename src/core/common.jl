@@ -11,5 +11,8 @@ const AES_KEY_SIZES = (128, 192, 256)
 encrypt(key::AbstractAesKey, block::AesByteBlock) = encrypt(_get_encrypt_key(key), block)
 decrypt(key::AbstractAesKey, block::AesByteBlock) = decrypt(_get_decrypt_key(key), block)
 
-encrypt(key::AbstractAesKey, a::UInt128) = encrypt(key, to_bytes(a)) |> to_uint128
-decrypt(key::AbstractAesKey, a::UInt128) = decrypt(key, to_bytes(a)) |> to_uint128
+encrypt(key::AbstractAesKey, a::T) where {T} = from_byte_block(T, encrypt(key, to_byte_block(a)))
+decrypt(key::AbstractAesKey, a::T) where {T} = from_byte_block(T, decrypt(key, to_byte_block(a)))
+
+_ensure_key_size(bytes::ByteSequence, key_size) =
+    @assert length(bytes) == key_size ÷ 8 "Key must be $key_size bits"

@@ -1,58 +1,72 @@
 const IS_BIG_ENDIAN = ENDIAN_BOM ≡ 0x01020304
-const ByteSequence = Union{AbstractArray{UInt8},Tuple{Vararg{UInt8}}}
-const AesByteBlock = NTuple{16, UInt8}
+const AesByteBlock = NTuple{16,VecElement{UInt8}}
+const ByteSequence = Union{AbstractArray{UInt8},Tuple{Vararg{UInt8}},Tuple{Vararg{VecElement{UInt8}}}}
 
 @inline function unsafe_reinterpret_convert(::Type{T}, x) where {T}
     r = Ref(x)
     GC.@preserve r unsafe_load(Ptr{T}(pointer_from_objref(r)))
 end
 
-@inline function unsafe_reinterpret_convert(::Type{T}, x, ::Val{N}) where {T,N}
+@inline function unsafe_reinterpret_convert(::Type{T}, x, N) where {T}
     r = Ref(x)
     GC.@preserve r begin
-        p = Ptr{T}(pointer_from_objref(r))
+        p = Ptr{VecElement{T}}(pointer_from_objref(r))
         Tuple(unsafe_load(p, i) for i in 1:N)
-    end::NTuple{N,T}
+    end::NTuple{N,VecElement{T}}
 end
 
-"""
-    to_bytes(x::UInt128) -> NTuple{16,UInt8}
+macro check_byte_length(bytes)
+    quote
+        @assert length($(esc(bytes))) == 16 "Invalid length of byte sequence"
+    end
+end
 
-Converts a `UInt128` value to a little-endian byte sequence.
-"""
-@inline function to_bytes(x::UInt128)
-    bytes = unsafe_reinterpret_convert(UInt8, x, Val(16))
+@inline function to_byte_block_unchecked(x::UInt128)
+    bytes = unsafe_reinterpret_convert(UInt8, x, 16)
     @static if IS_BIG_ENDIAN
         reverse(bytes)
     else
         bytes
     end
 end
+to_byte_block_unchecked(bytes::ByteSequence) = Tuple(VecElement{UInt8}.(bytes))::AesByteBlock
 
 """
-    pad_or_trunc(x::ByteSequence, N)
+    to_byte_block(x::UInt128) -> NTuple{16,VecElement{UInt8}}
+    to_byte_block(bytes::ByteSequence) -> NTuple{16,VecElement{UInt8}}
 
-Pads or truncates a little-endian byte sequence to length `N`.
+Converts a `UInt128` or a byte sequence to a little-endian byte sequence.
 """
-@inline function pad_or_trunc(x::ByteSequence, N)
-    n = length(x)
-    if n ≥ N
-        Tuple(x[1:N])
-    else
-        Tuple((x..., zeros(UInt8, N - n)...))
-    end::NTuple{N,UInt8}
+@inline to_byte_block(x::UInt128) = to_byte_block_unchecked(x)
+@inline to_byte_block(bytes::AesByteBlock) = bytes
+@inline function to_byte_block(bytes::ByteSequence)
+    @check_byte_length bytes
+    to_byte_block_unchecked(bytes)
 end
 
-"""
-    to_uint128(bytes::ByteSequence) -> UInt128
+from_byte_block(::Type{UInt128}, bytes::AesByteBlock) = to_uint128(bytes)
+from_byte_block(::Type{<:AbstractArray{UInt8}}, bytes::AesByteBlock) = UInt8.(bytes)
+from_byte_block(::Type{<:Tuple{Vararg{UInt8}}}, bytes::AesByteBlock) = Tuple(UInt8.(bytes))
 
-Converts a little-endian byte sequence to a `UInt128` value.
-"""
-@inline to_uint128(bytes::AesByteBlock) = unsafe_reinterpret_convert(
+@inline to_uint128_unchecked(bytes::AesByteBlock) = unsafe_reinterpret_convert(
     UInt128, @static if IS_BIG_ENDIAN
         reverse(bytes)
     else
         bytes
     end
 )
-@inline to_uint128(bytes::ByteSequence) = to_uint128(pad_or_trunc(bytes, 16))
+@inline to_uint128_unchecked(bytes::ByteSequence) = to_uint128_unchecked(
+    to_byte_block_unchecked(bytes)
+)
+@inline to_uint128_unchecked(bytes::DenseArray{UInt8}) = only(reinterpret(UInt128, bytes))
+"""
+    to_uint128(bytes::ByteSequence) -> UInt128
+
+Converts a little-endian byte sequence to a `UInt128` value.
+"""
+@inline to_uint128(bytes::AesByteBlock) = to_uint128_unchecked(bytes)
+@inline to_uint128(bytes::ByteSequence) = to_uint128_unchecked(to_byte_block(bytes))
+@inline function to_uint128(bytes::DenseArray{UInt8})
+    @check_byte_length bytes
+    to_uint128_unchecked(bytes)
+end

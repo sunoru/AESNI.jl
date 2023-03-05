@@ -105,11 +105,11 @@ struct Aes256EncryptKey <: AbstractAesEncryptKey
     keys::NTuple{15,__m128i}
     Aes256EncryptKey(keys::NTuple{15,__m128i}) = new(keys)
 end
-Aes256EncryptKey(key::ByteSequence) = Aes256EncryptKey(pad_or_trunc(key, 32))
-Aes256EncryptKey(key1::UInt128, key2::UInt128=UInt128(0)) = Aes256EncryptKey(
-    (to_bytes(key1)..., to_bytes(key2)...)
+Aes256EncryptKey(key1::UInt128, key2::UInt128) = Aes256EncryptKey(
+    (to_byte_block(key1)..., to_byte_block(key2)...)
 )
-function Aes256EncryptKey(key::NTuple{32,UInt8})
+function Aes256EncryptKey(key::ByteSequence)
+    _ensure_key_size(key, 256)
     key1 = to_uint128(key[1:16]) |> to_m128i
     key2 = to_uint128(key[17:32]) |> to_m128i
     temp1 = Ref(key1)
@@ -174,7 +174,7 @@ Aes256DecryptKey(k::Aes256Key) = Aes256DecryptKey((k.keys[15:28]..., k.keys[1]))
     x = aes_enc(x, key12)
     x = aes_enc(x, key13)
     x = aes_enc(x, key14)
-    aes_enc_last(x, key15) |> to_bytes
+    aes_enc_last(x, key15) |> to_byte_block
 end
 
 @inline function aes256_decrypt(input::AesByteBlock, key::NTuple{15,__m128i})
@@ -193,7 +193,7 @@ end
     x = aes_dec(x, key12)
     x = aes_dec(x, key13)
     x = aes_dec(x, key14)
-    aes_dec_last(x, key15) |> to_bytes
+    aes_dec_last(x, key15) |> to_byte_block
 end
 
 _get_encrypt_key(key::Aes256Key) = Aes256EncryptKey(key)

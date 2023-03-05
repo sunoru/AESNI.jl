@@ -8,7 +8,7 @@ using Test
     30C81C46 A35CE411 E5FBC119 1A0A52EF
     F69F2445 DF4F9B17 AD2B417B E66C3710"""
 
-    test_cipher(
+    @test_cipher(
         Aes128Ecb,
         bytes"2B7E1516 28AED2A6 ABF71588 09CF4F3C",
         plain,
@@ -18,7 +18,7 @@ using Test
         7B0C785E 27E8AD3F 82232071 04725DD4"
     )
 
-    test_cipher(
+    @test_cipher(
         Aes192Ecb,
         bytes"8E73B0F7 DA0E6452 C810F32B 809079E5 62F8EAD2 522C6B7B",
         plain,
@@ -28,7 +28,7 @@ using Test
         9A4B41BA 738D6C72 FB166916 03C18E0E"
     )
 
-    test_cipher(
+    @test_cipher(
         Aes256Ecb,
         bytes"603DEB10 15CA71BE 2B73AEF0 857D7781
         1F352C07 3B6108D7 2D9810A3 0914DFF4",

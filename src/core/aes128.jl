@@ -40,8 +40,9 @@ struct Aes128EncryptKey <: AbstractAesEncryptKey
     keys::NTuple{11, __m128i}
     Aes128EncryptKey(keys::NTuple{11, __m128i}) = new(keys)
 end
-Aes128EncryptKey(key::UInt128) = Aes128EncryptKey(to_bytes(key))
+Aes128EncryptKey(key::UInt128) = Aes128EncryptKey(to_byte_block(key))
 function Aes128EncryptKey(key::ByteSequence)
+    _ensure_key_size(key, 128)
     key1 = to_uint128(key) |> to_m128i
     key2 = aes_128_assist(key1, aes_key_gen_assist(key1, Val(0x1)))
     key3 = aes_128_assist(key2, aes_key_gen_assist(key2, Val(0x2)))
@@ -95,7 +96,7 @@ Aes128DecryptKey(k::Aes128Key) = Aes128DecryptKey((k.keys[11:20]..., k.keys[1]))
     x = aes_enc(x, key8)
     x = aes_enc(x, key9)
     x = aes_enc(x, key10)
-    aes_enc_last(x, key11) |> to_bytes
+    aes_enc_last(x, key11) |> to_byte_block
 end
 
 @inline function aes128_decrypt(input::AesByteBlock, key::NTuple{11,__m128i})
@@ -110,7 +111,7 @@ end
     x = aes_dec(x, key8)
     x = aes_dec(x, key9)
     x = aes_dec(x, key10)
-    aes_dec_last(x, key11) |> to_bytes
+    aes_dec_last(x, key11) |> to_byte_block
 end
 
 _get_encrypt_key(key::Aes128Key) = Aes128EncryptKey(key)
