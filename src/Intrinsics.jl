@@ -1,23 +1,13 @@
 module Intrinsics
 
-using ..AESNI: AESNI, unsafe_reinterpret_convert, to_uint128, ByteSequence
+using ..AESNI: AESNI, unsafe_reinterpret_convert, ByteSequence
 export aes_dec, aes_dec_last, aes_enc, aes_enc_last, aes_key_gen_assist, aes_imc
 
 const __m128i = NTuple{2,VecElement{UInt64}}
 
-# This struct is used to indirectly convert between `UInt128` and `__m128i`.
-struct AesniUInt128
-    value::__m128i
-    AesniUInt128(x::__m128i) = new(x)
-    AesniUInt128(x::UInt128) = new(unsafe_reinterpret_convert(__m128i, x))
-    AesniUInt128(x::ByteSequence) = AesniUInt128(to_uint128(x))
-end
-Base.convert(::Type{UInt128}, x::AesniUInt128) = unsafe_reinterpret_convert(UInt128, x.value)
-Base.UInt128(x::AesniUInt128) = convert(UInt128, x)
-to_m128i(x) = AesniUInt128(x).value
-AESNI.to_uint128(x::__m128i) = AesniUInt128(x) |> UInt128
+@inline to_m128i(x::UInt128) = unsafe_reinterpret_convert(__m128i, x)
+@inline to_uint128(x::__m128i) = unsafe_reinterpret_convert(UInt128, x)
 
-# will be automatically inlined
 @inline _xor(a::__m128i, b::__m128i) = to_uint128(a) ⊻ to_uint128(b) |> to_m128i
 
 """

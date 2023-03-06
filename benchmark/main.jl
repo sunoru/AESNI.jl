@@ -8,8 +8,11 @@ nettle_enc = Nettle.Encryptor("AES256", key)
 nettle_dec = Nettle.Decryptor("AES256", key)
 
 plain = hex2bytes("fac25f0d5274b1d9168b0816753a784a")
+plain128 = AESNI.bytes_to_uint128(plain)
 
 cipher = AESNI.encrypt(aesni_ctx, plain)
+cipher128 = AESNI.encrypt(aesni_ctx, plain128)
+
 @assert cipher == Nettle.encrypt(nettle_enc, plain)
 @assert AESNI.decrypt(aesni_ctx, cipher) == plain
 @assert Nettle.decrypt(nettle_dec, cipher) == plain
@@ -17,8 +20,12 @@ cipher = AESNI.encrypt(aesni_ctx, plain)
 @info "Benchmarking block ciphers"
 @info "AESNI.encrypt"
 @btime AESNI.encrypt($aesni_ctx, $plain)
+@info "AESNI.encrypt on UInt128"
+@btime AESNI.encrypt($aesni_ctx, $plain128)
 @info "AESNI.decrypt"
 @btime AESNI.decrypt($aesni_ctx, $cipher)
+@info "AESNI.decrypt on UInt128"
+@btime AESNI.decrypt($aesni_ctx, $cipher128)
 @info "Nettle.encrypt"
 @btime Nettle.encrypt($nettle_enc, $plain)
 @info "Nettle.decrypt"

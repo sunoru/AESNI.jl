@@ -40,10 +40,10 @@ struct Aes128EncryptKey <: AbstractAesEncryptKey
     keys::NTuple{11,__m128i}
     Aes128EncryptKey(keys::NTuple{11,__m128i}) = new(keys)
 end
-Aes128EncryptKey(key::UInt128) = Aes128EncryptKey(unsafe_reinterpret_convert(AesByteBlock, key))
+Aes128EncryptKey(key::UInt128) = Aes128EncryptKey(from_uint128(Vector{UInt8}, key))
 function Aes128EncryptKey(key::ByteSequence)
     _ensure_key_size(key, 128)
-    key1 = to_uint128(key) |> to_m128i
+    key1 = bytes_to_uint128(key) |> to_m128i
     key2 = aes_128_assist(key1, aes_key_gen_assist(key1, Val(0x1)))
     key3 = aes_128_assist(key2, aes_key_gen_assist(key2, Val(0x2)))
     key4 = aes_128_assist(key3, aes_key_gen_assist(key3, Val(0x4)))

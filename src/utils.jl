@@ -1,5 +1,4 @@
 const IS_BIG_ENDIAN = ENDIAN_BOM ≡ 0x01020304
-const AesByteBlock = NTuple{16,VecElement{UInt8}}
 const ByteSequence = Union{AbstractArray{UInt8},Tuple{Vararg{UInt8}},Tuple{Vararg{VecElement{UInt8}}}}
 
 @inline function unsafe_reinterpret_convert(::Type{T}, x) where {T}
@@ -15,9 +14,7 @@ end
 end
 
 macro check_byte_length(bytes)
-    quote
-        @assert length($(esc(bytes))) == 16 "Invalid length of byte sequence"
-    end
+    :(@assert length($(esc(bytes))) == 16 "Invalid length of byte sequence")
 end
 
 """
@@ -36,19 +33,12 @@ end
 @inline from_uint128(::Type{T}, x::UInt128) where {T<:Tuple} = T(from_uint128(Vector{UInt8}, x))
 
 """
-    to_uint128(bytes::ByteSequence) -> UInt128
+    bytes_to_uint128(bytes::ByteSequence) -> UInt128
 
 Converts a little-endian byte sequence to a `UInt128` value.
 """
-@inline to_uint128(bytes::AesByteBlock) = unsafe_reinterpret_convert(
-    UInt128, @static if IS_BIG_ENDIAN
-        reverse(bytes)
-    else
-        bytes
-    end
-)
-@inline to_uint128(bytes::ByteSequence) = to_uint128(collect(bytes))
-@inline function to_uint128(bytes::DenseArray{UInt8})
+@inline bytes_to_uint128(bytes::ByteSequence) = to_uint128(collect(bytes))
+@inline function bytes_to_uint128(bytes::DenseArray{UInt8})
     @check_byte_length bytes
     only(reinterpret(UInt128, @static if IS_BIG_ENDIAN
         reverse(bytes)

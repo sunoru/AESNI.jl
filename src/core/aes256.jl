@@ -110,8 +110,8 @@ Aes256EncryptKey(key1::UInt128, key2::UInt128) = Aes256EncryptKey(
 )
 function Aes256EncryptKey(key::ByteSequence)
     _ensure_key_size(key, 256)
-    key1 = to_uint128(key[1:16]) |> to_m128i
-    key2 = to_uint128(key[17:32]) |> to_m128i
+    key1 = bytes_to_uint128(key[1:16]) |> to_m128i
+    key2 = bytes_to_uint128(key[17:32]) |> to_m128i
     temp1 = Ref(key1)
     temp3 = Ref(key2)
     temp2 = Ref{__m128i}()
@@ -157,7 +157,8 @@ Aes256DecryptKey(k::Aes256Key) = k.dec
 
 @inline function aes256_encrypt(input::UInt128, key::NTuple{15,__m128i})
     key1, key2, key3, key4, key5, key6, key7, key8, key9, key10, key11, key12, key13, key14, key15 = key
-    x = _xor(to_m128i(input), key1)
+    input = to_m128i(input)
+    x = _xor(input, key1)
     x = aes_enc(x, key2)
     x = aes_enc(x, key3)
     x = aes_enc(x, key4)
@@ -176,7 +177,8 @@ end
 
 @inline function aes256_decrypt(input::UInt128, key::NTuple{15,__m128i})
     key1, key2, key3, key4, key5, key6, key7, key8, key9, key10, key11, key12, key13, key14, key15 = key
-    x = _xor(to_m128i(input), key1)
+    input = to_m128i(input)
+    x = _xor(input, key1)
     x = aes_dec(x, key2)
     x = aes_dec(x, key3)
     x = aes_dec(x, key4)

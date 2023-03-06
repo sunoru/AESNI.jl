@@ -77,8 +77,8 @@ struct Aes192EncryptKey <: AbstractAesEncryptKey
 end
 function Aes192EncryptKey(key::ByteSequence)
     _ensure_key_size(key, 192)
-    key1 = to_uint128(key[1:16]) |> to_m128i
-    key2 = to_uint128([key[17:24]..., 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]) |> to_m128i
+    key1 = bytes_to_uint128(key[1:16]) |> to_m128i
+    key2 = bytes_to_uint128([key[17:24]..., 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]) |> to_m128i
     temp1 = Ref(key1)
     temp3 = Ref(key2)
 

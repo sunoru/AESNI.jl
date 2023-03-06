@@ -18,8 +18,6 @@ end
 
 
 @static if AESNI_ENABLED
-    export AesByteBlock
-
     export Aes128EncryptKey, Aes128DecryptKey, Aes128Key
     export Aes192EncryptKey, Aes192DecryptKey, Aes192Key
     export Aes256EncryptKey, Aes256DecryptKey, Aes256Key
@@ -35,7 +33,7 @@ end
     include("./utils.jl")
     include("./Intrinsics.jl")
     using .Intrinsics
-    using .Intrinsics: __m128i, AesniUInt128, to_m128i, _xor
+    using .Intrinsics: __m128i, to_m128i, to_uint128, _xor
 
     include("./core/common.jl")
     include("./core/aes128.jl")
