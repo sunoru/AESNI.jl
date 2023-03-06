@@ -2,9 +2,9 @@ abstract type AbstractAesKey end
 abstract type AbstractAesEncryptKey <: AbstractAesKey end
 abstract type AbstractAesDecryptKey <: AbstractAesKey end
 
-Base.show(io::IO, key::AbstractAesKey) = print(io, typeof(key), "(", map(to_uint128, key.keys), ")")
+Base.show(io::IO, key::Union{AbstractAesEncryptKey,AbstractAesDecryptKey}) = print(io, typeof(key), "(", map(to_uint128, Tuple(key)), ")")
 
-@inline Base.Tuple(key::AbstractAesKey) = key.keys
+@inline Base.Tuple(key::Union{AbstractAesEncryptKey,AbstractAesDecryptKey}) = key.keys
 
 const AES_KEY_SIZES = (128, 192, 256)
 
