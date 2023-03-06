@@ -1,5 +1,5 @@
 const IS_BIG_ENDIAN = ENDIAN_BOM ≡ 0x01020304
-const ByteSequence = Union{AbstractArray{UInt8},Tuple{Vararg{UInt8}},Tuple{Vararg{VecElement{UInt8}}}}
+const ByteSequence = Union{AbstractArray{UInt8},Tuple{Vararg{UInt8}}}
 
 @inline function unsafe_reinterpret_convert(::Type{T}, x) where {T}
     r = Ref(x)

@@ -12,30 +12,33 @@ for key_size in AES_KEY_SIZES
     end
 end
 
-function encrypt(ctx::AesEcbCipher, plain::AbstractArray{UInt8})
-    key = ctx.key
+function encrypt!(ctx::AesEcbCipher, cipher::AbstractVector{UInt8}, plain::AbstractVector{UInt8})
     len = length(plain)
+    @assert length(cipher) >= len "Output buffer is too small"
     n = len ÷ 16
     @assert n * 16 == len "Invalid length of plain text (must be padded to 16n bytes)"
+    key = ctx.key
     plain128 = reinterpret(UInt128, plain)
-    b = Vector{UInt8}(undef, len)
-    b128 = reinterpret(UInt128, b)
+    b128 = reinterpret(UInt128, cipher)
     @inbounds for i in 1:n
         b128[i] = encrypt(key, plain128[i])
     end
-    b
+    cipher
 end
 
-function decrypt(ctx::AesEcbCipher, cipher::AbstractArray{UInt8})
-    key = ctx.key
+function decrypt!(ctx::AesEcbCipher, plain::AbstractVector{UInt8}, cipher::AbstractVector{UInt8})
     len = length(cipher)
+    @assert length(plain) >= len "Output buffer is too small"
     n = len ÷ 16
     @assert n * 16 == len "Invalid length of cipher text"
+    key = ctx.key
     cipher128 = reinterpret(UInt128, cipher)
-    b = Vector{UInt8}(undef, n * 16)
-    b128 = reinterpret(UInt128, b)
+    b128 = reinterpret(UInt128, plain)
     @inbounds for i in 1:n
         b128[i] = decrypt(key, cipher128[i])
     end
-    b
+    plain
 end
+
+encrypt(ctx::AesEcbCipher, plain::AbstractVector{UInt8}) = encrypt!(ctx, similar(plain), plain)
+decrypt(ctx::AesEcbCipher, cipher::AbstractVector{UInt8}) = decrypt!(ctx, similar(cipher), cipher)

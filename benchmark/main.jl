@@ -1,46 +1,65 @@
 using BenchmarkTools
-import Nettle, AESNI
+import Nettle, AESNI, AES
 
-key = hex2bytes("013ff43104f53f5c360a502dbff8adb7db39599be1ade3cc05a72e6e07103302")
+KEY = hex2bytes("013ff43104f53f5c360a502dbff8adb7db39599be1ade3cc05a72e6e07103302")
 
-aesni_ctx = AESNI.Aes256Key(key)
-nettle_enc = Nettle.Encryptor("AES256", key)
-nettle_dec = Nettle.Decryptor("AES256", key)
+for key_size in AESNI.AES_KEY_SIZES
 
-plain = hex2bytes("fac25f0d5274b1d9168b0816753a784a")
-plain128 = AESNI.bytes_to_uint128(plain)
+    @info "Key size: $key_size"
+    key = KEY[1:key_size÷8]
 
-cipher = AESNI.encrypt(aesni_ctx, plain)
-cipher128 = AESNI.encrypt(aesni_ctx, plain128)
+    aesni_ecb = AESNI.AesCipher(key_size, AESNI.ECB, key)
+    aesni_key = aesni_ecb.key
 
-@assert cipher == Nettle.encrypt(nettle_enc, plain)
-@assert AESNI.decrypt(aesni_ctx, cipher) == plain
-@assert Nettle.decrypt(nettle_dec, cipher) == plain
+    nettle_enc = Nettle.Encryptor("AES$key_size", key)
+    nettle_dec = Nettle.Decryptor("AES$key_size", key)
 
-@info "Benchmarking block ciphers"
-@info "AESNI.encrypt"
-@btime AESNI.encrypt($aesni_ctx, $plain)
-@info "AESNI.encrypt on UInt128"
-@btime AESNI.encrypt($aesni_ctx, $plain128)
-@info "AESNI.decrypt"
-@btime AESNI.decrypt($aesni_ctx, $cipher)
-@info "AESNI.decrypt on UInt128"
-@btime AESNI.decrypt($aesni_ctx, $cipher128)
-@info "Nettle.encrypt"
-@btime Nettle.encrypt($nettle_enc, $plain)
-@info "Nettle.decrypt"
-@btime Nettle.decrypt($nettle_dec, $cipher)
+    aes_key = AES.convert_key(key, Val(key_size))
+    aes_ecb = AES.AESCipher(; key_length=key_size, mode=AES.ECB, key=aes_key)
 
-large_plain = rand(UInt8, 10 * 2^20)
-aesni_ecb = AESNI.Aes256Ecb(key)
-large_cipher = AESNI.encrypt(aesni_ecb, large_plain)
+    plain = hex2bytes("fac25f0d5274b1d9168b0816753a784a")
 
-@info "Benchmarking ECB with larger data (10MB)"
-@info "AESNI.encrypt"
-@btime AESNI.encrypt($aesni_ecb, $large_plain)
-@info "AESNI.decrypt"
-@btime AESNI.decrypt($aesni_ecb, $large_cipher)
-@info "Nettle.encrypt"
-@btime Nettle.encrypt($nettle_enc, $large_plain)
-@info "Nettle.decrypt"
-@btime Nettle.decrypt($nettle_dec, $large_cipher)
+    cipher = AESNI.encrypt(aesni_key, plain)
+
+    @assert cipher == Nettle.encrypt(nettle_enc, plain)
+    @assert AESNI.decrypt(aesni_key, cipher) == plain
+    @assert Nettle.decrypt(nettle_dec, cipher) == plain
+
+    @info "Benchmarking block ciphers"
+    @info "AESNI.encrypt"
+    @btime AESNI.encrypt($aesni_key, $plain)
+    @info "AESNI.decrypt"
+    @btime AESNI.decrypt($aesni_key, $cipher)
+    @info "Nettle.encrypt"
+    @btime Nettle.encrypt($nettle_enc, $plain)
+    @info "Nettle.decrypt"
+    @btime Nettle.decrypt($nettle_dec, $cipher)
+    if key_size != 256
+        # `encrypt` with AES256Key is missing in AES.jl
+        @info "AES.encrypt"
+        cipher_aes = @btime AES.encrypt($plain, $aes_ecb)
+        @info "AES.decrypt"
+        @btime AES.decrypt($cipher_aes, $aes_ecb)
+    end
+
+    large_plain = rand(UInt8, 10 * 2^20)
+    large_cipher = AESNI.encrypt(aesni_ecb, large_plain)
+
+    @info "Benchmarking ECB with larger data (10MB)"
+    @info "AESNI.encrypt"
+    @btime AESNI.encrypt($aesni_ecb, $large_plain)
+    @info "AESNI.decrypt"
+    @btime AESNI.decrypt($aesni_ecb, $large_cipher)
+    @info "Nettle.encrypt"
+    @btime Nettle.encrypt($nettle_enc, $large_plain)
+    @info "Nettle.decrypt"
+    @btime Nettle.decrypt($nettle_dec, $large_cipher)
+    if key_size != 256
+        @info "AES.encrypt"
+        large_cipher_aes = @btime AES.encrypt($large_plain, $aes_ecb)
+        @info "AES.decrypt"
+        @btime AES.decrypt($large_cipher_aes, $aes_ecb)
+    end
+
+    println(stderr)
+end

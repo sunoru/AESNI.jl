@@ -2,7 +2,13 @@
 
 julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "8177df58e5f7bd38736df75ffaa36b927148c982"
+project_hash = "a2d57a31ff47f3a7c17c4d27ca2cc660b9157327"
+
+[[deps.AES]]
+deps = ["Random", "StaticArrays"]
+git-tree-sha1 = "43689f7a3ceb102077f83e2a7173dbf9563690b8"
+uuid = "5a3fb44e-d90d-11e9-053b-99581e1bac63"
+version = "0.1.2"
 
 [[deps.AESNI]]
 deps = ["MLStyle"]
@@ -187,6 +193,12 @@ uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
 [[deps.SparseArrays]]
 deps = ["LinearAlgebra", "Random"]
 uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+
+[[deps.StaticArrays]]
+deps = ["LinearAlgebra", "Random", "Statistics"]
+git-tree-sha1 = "da4cf579416c81994afd6322365d00916c79b8ae"
+uuid = "90137ffa-7385-5640-81b9-e52037218182"
+version = "0.12.5"
 
 [[deps.Statistics]]
 deps = ["LinearAlgebra", "SparseArrays"]
