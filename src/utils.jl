@@ -40,7 +40,7 @@ Converts a little-endian byte sequence to a `UInt128` value.
 @inline bytes_to_uint128(bytes::ByteSequence) = bytes_to_uint128(collect(bytes))
 @inline function bytes_to_uint128(bytes::DenseArray{UInt8})
     @check_byte_length bytes
-    only(reinterpret(UInt128, @static if IS_BIG_ENDIAN
+    unsafe_load(Base.unsafe_convert(Ptr{UInt128}, @static if IS_BIG_ENDIAN
         reverse(bytes)
     else
         bytes
